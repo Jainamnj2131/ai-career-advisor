@@ -1,40 +1,271 @@
-.hero{
-    background: linear-gradient(135deg,#2563eb,#4f46e5,#7c3aed);
-    border-radius:24px;
-    padding:60px 40px;
-    text-align:center;
-    color:white;
-    margin-bottom:35px;
-    box-shadow:0 15px 35px rgba(0,0,0,.35);
+/* =======================================================================
+   style.css
+   -----------------------------------------------------------------------
+   All custom styling for the AI Career Advisor app - modern dark theme
+   with blue / cyan accents. Loaded by app.py via load_css().
+   ======================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.hero-badge{
-    display:inline-block;
-    padding:8px 18px;
-    background:rgba(255,255,255,.18);
-    border-radius:999px;
-    font-size:14px;
-    margin-bottom:18px;
-    font-weight:600;
+/* ---------- App background ---------- */
+.stApp {
+    background: radial-gradient(1200px 600px at 10% -10%, rgba(34,211,238,0.10), transparent),
+                radial-gradient(1000px 500px at 100% 0%, rgba(59,130,246,0.10), transparent),
+                #0b0f19;
 }
 
-.hero h1{
-    font-size:56px;
-    margin:0;
-    font-weight:800;
+/* ---------- Overall content padding / spacing ---------- */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    max-width: 1300px;
 }
 
-.hero p{
-    font-size:20px;
-    max-width:850px;
-    margin:20px auto 0;
-    line-height:1.7;
-    opacity:.95;
+/* ---------- Hero section ---------- */
+.hero-wrap {
+    padding: 2.4rem 2.2rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.14) 0%, rgba(59,130,246,0.10) 50%, rgba(11,15,25,0.0) 100%);
+    border: 1px solid rgba(148,163,184,0.15);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.hero-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #22d3ee;
+    margin-bottom: 0.6rem;
+}
+.hero-title {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0 0 0.7rem 0;
+    background: linear-gradient(90deg, #e2e8f0 0%, #a5f3fc 45%, #93c5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: #94a3b8;
+    max-width: 700px;
+    margin: 0;
+    font-weight: 400;
 }
 
-.footer{
-    text-align:center;
-    color:#9ca3af;
-    padding:30px;
-    font-size:15px;
+/* ---------- Metric cards (hero row) ---------- */
+.metric-card {
+    background: linear-gradient(160deg, #141a2b 0%, #101526 100%);
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 16px;
+    padding: 1.3rem 1.4rem;
+    text-align: left;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.metric-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(34,211,238,0.55);
+    box-shadow: 0 10px 30px -12px rgba(34,211,238,0.35);
+}
+.metric-card .metric-label {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+.metric-card .metric-value {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #e2e8f0;
+}
+.metric-card .metric-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+    display: inline-block;
+}
+
+/* ---------- Section headings ---------- */
+.section-heading {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0.4rem 0 1rem 0;
+    padding-left: 0.75rem;
+    border-left: 4px solid #22d3ee;
+}
+
+/* ---------- Streamlit native metrics (results section) ---------- */
+div[data-testid="stMetric"] {
+    background: linear-gradient(160deg, #141a2b 0%, #101526 100%);
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 14px;
+    padding: 1rem 1rem 0.7rem 1rem;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+}
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34,211,238,0.5);
+}
+div[data-testid="stMetricLabel"] {
+    color: #94a3b8 !important;
+}
+
+/* ---------- Inputs: bigger dropdowns and text areas ---------- */
+div[data-baseweb="select"] > div {
+    min-height: 3.2rem;
+    font-size: 1.05rem;
+    border-radius: 12px !important;
+    border-color: rgba(148,163,184,0.25) !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+div[data-baseweb="select"] > div:hover {
+    border-color: #22d3ee !important;
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.3);
+}
+.stTextArea textarea {
+    font-size: 1.05rem;
+    padding: 0.9rem;
+    border-radius: 12px;
+    min-height: 110px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.stTextArea textarea:focus {
+    border-color: #22d3ee !important;
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.4);
+}
+label {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+}
+
+/* ---------- Buttons ---------- */
+.stButton > button {
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.7rem 1.8rem;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
+    color: #04121a;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 8px 24px -8px rgba(34,211,238,0.55);
+    color: #04121a;
+}
+
+/* ---------- Skill badges ---------- */
+.skill-have {
+    background-color: rgba(34,197,94,0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.35);
+    padding: 7px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.skill-have:hover {
+    transform: translateY(-2px) scale(1.04);
+    background-color: rgba(34,197,94,0.28);
+}
+.skill-missing {
+    background-color: rgba(248,113,113,0.14);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.35);
+    padding: 7px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.skill-missing:hover {
+    transform: translateY(-2px) scale(1.04);
+    background-color: rgba(248,113,113,0.26);
+}
+
+/* ---------- Recommendation box ---------- */
+.recommendation-box {
+    background: linear-gradient(135deg, rgba(34,211,238,0.10) 0%, rgba(59,130,246,0.08) 100%);
+    border-left: 5px solid #22d3ee;
+    padding: 1.2rem 1.4rem;
+    border-radius: 12px;
+    color: #cbd5e1;
+    font-size: 1.03rem;
+    line-height: 1.55;
+}
+
+/* ---------- AI recommendation box (Gemini) ---------- */
+.ai-recommendation-box {
+    background: linear-gradient(135deg, rgba(129,140,248,0.12) 0%, rgba(34,211,238,0.08) 100%);
+    border-left: 5px solid #818cf8;
+    padding: 1.2rem 1.4rem;
+    border-radius: 12px;
+    color: #cbd5e1;
+    font-size: 1.0rem;
+    line-height: 1.6;
+}
+.ai-recommendation-box h4 {
+    color: #a5b4fc;
+    margin-top: 0.9rem;
+    margin-bottom: 0.35rem;
+    font-family: 'Sora', 'Inter', sans-serif;
+}
+.ai-recommendation-box h4:first-child {
+    margin-top: 0;
+}
+
+/* ---------- Dividers ---------- */
+hr {
+    border-color: rgba(148,163,184,0.15) !important;
+    margin: 1.8rem 0 !important;
+}
+
+/* ---------- Dataframe ---------- */
+div[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(148,163,184,0.15);
+}
+
+/* ---------- Sidebar ---------- */
+section[data-testid="stSidebar"] {
+    border-right: 1px solid rgba(148,163,184,0.12);
+}
+
+/* ---------- Footer ---------- */
+.footer-wrap {
+    text-align: center;
+    padding: 1.6rem 1rem 0.6rem 1rem;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+.footer-wrap a {
+    color: #22d3ee;
+    text-decoration: none;
+}
+.footer-wrap a:hover {
+    text-decoration: underline;
 }

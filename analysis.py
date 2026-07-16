@@ -16,17 +16,65 @@ import re
 import pandas as pd
 
 # ---------------------------------------------------------------------
-# Predefined skill keywords to search for inside job descriptions
+# Predefined skill keywords to search for inside job descriptions,
+# organized by category. SKILL_KEYWORDS (the flat list used by the
+# extraction functions) is built automatically from these categories so
+# the function signatures below never need to change.
 # ---------------------------------------------------------------------
-SKILL_KEYWORDS = [
-    "Python", "Java", "C++", "JavaScript", "TypeScript", "React", "Angular",
-    "Vue", "Node.js", "Express", "Spring Boot", "MongoDB", "SQL", "MySQL",
-    "PostgreSQL", "Oracle", "Redis", "Docker", "Kubernetes", "AWS", "Azure",
-    "GCP", "Git", "REST API", "GraphQL", "HTML", "CSS", "Power BI",
-    "Tableau", "Excel", "Pandas", "NumPy", "TensorFlow", "PyTorch",
-    "Machine Learning", "Deep Learning", "Statistics", "Communication",
-    "Problem Solving", "Teamwork", "Data Structures", "Algorithms"
-]
+SKILL_CATEGORIES = {
+    "Programming Languages": [
+        "Python", "Java", "C++", "C#", "JavaScript", "TypeScript", "Golang",
+        "Rust", "Kotlin", "Swift", "PHP", "Ruby", "Scala", "MATLAB",
+        "Perl", "Dart",
+    ],
+    "Frontend": [
+        "React", "Angular", "Vue", "Next.js", "Redux", "HTML", "CSS",
+        "Sass", "Tailwind CSS", "Bootstrap", "jQuery", "Webpack",
+    ],
+    "Backend": [
+        "Node.js", "Express", "Spring Boot", "Django", "Flask", "FastAPI",
+        ".NET", "Laravel", "Ruby on Rails", "REST API", "GraphQL",
+        "Microservices", "gRPC",
+    ],
+    "Databases": [
+        "SQL", "MySQL", "PostgreSQL", "Oracle", "MongoDB", "Redis",
+        "Cassandra", "DynamoDB", "SQLite", "MariaDB", "Elasticsearch",
+        "Firebase",
+    ],
+    "Cloud": [
+        "AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform",
+        "CloudFormation", "Serverless", "Lambda",
+    ],
+    "DevOps": [
+        "Git", "CI/CD", "Jenkins", "GitHub Actions", "GitLab CI",
+        "Ansible", "Linux", "Bash", "Prometheus", "Grafana", "Nginx",
+    ],
+    "Data Analytics": [
+        "Power BI", "Tableau", "Excel", "Pandas", "NumPy", "SQL Server",
+        "ETL", "Data Warehousing", "Spark", "Hadoop", "Looker",
+        "Data Visualization", "A/B Testing",
+    ],
+    "AI": [
+        "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch",
+        "Scikit-learn", "NLP", "Computer Vision", "LLM", "Generative AI",
+        "MLOps", "Keras", "OpenCV",
+    ],
+    "Soft Skills": [
+        "Communication", "Problem Solving", "Teamwork", "Leadership",
+        "Time Management", "Critical Thinking", "Collaboration",
+        "Adaptability", "Project Management", "Agile", "Scrum",
+    ],
+    "Computer Science Fundamentals": [
+        "Data Structures", "Algorithms", "Statistics", "OOP",
+        "System Design", "Distributed Systems",
+    ],
+}
+
+# Flat list used by the extraction functions (order preserved,
+# duplicates removed just in case).
+SKILL_KEYWORDS = list(dict.fromkeys(
+    skill for category_skills in SKILL_CATEGORIES.values() for skill in category_skills
+))
 
 
 # ---------------------------------------------------------------------
@@ -59,8 +107,19 @@ def get_job_titles(df: pd.DataFrame) -> list:
 # Filtering
 # ---------------------------------------------------------------------
 def filter_jobs_by_title(df: pd.DataFrame, selected_title: str) -> pd.DataFrame:
-    """Return all job postings that match the selected job title exactly."""
-    return df[df["title"] == selected_title].copy()
+    """
+    Return all job postings whose title contains the selected job title text.
+
+    Matching is case-insensitive and partial ("contains"), so selecting
+    "Full Stack Developer" also matches "Senior Full Stack Developer",
+    "Lead Full Stack Engineer" (via shared words), ".NET Full Stack
+    Developer", etc. - not just an exact title match.
+    """
+    if not selected_title or not selected_title.strip():
+        return df.iloc[0:0].copy()
+
+    search_term = selected_title.strip().lower()
+    return df[df["title"].str.lower().str.contains(re.escape(search_term), na=False)].copy()
 
 
 # ---------------------------------------------------------------------
@@ -102,6 +161,27 @@ def get_average_salary(filtered_df: pd.DataFrame):
     return values.mean()
 
 
+def get_salary_stats(filtered_df: pd.DataFrame) -> dict:
+    """
+    Return a dict with 'average', 'highest', and 'lowest' compensation
+    for the filtered jobs. Any value is None if salary data is unavailable,
+    so the caller can handle the "no salary data" case gracefully.
+    """
+    if filtered_df.empty:
+        return {"average": None, "highest": None, "lowest": None}
+
+    values = filtered_df["compensation"].apply(_parse_compensation_value).dropna()
+
+    if values.empty:
+        return {"average": None, "highest": None, "lowest": None}
+
+    return {
+        "average": values.mean(),
+        "highest": values.max(),
+        "lowest": values.min(),
+    }
+
+
 # ---------------------------------------------------------------------
 # Summary statistics
 # ---------------------------------------------------------------------
@@ -123,6 +203,34 @@ def get_job_summary(filtered_df: pd.DataFrame) -> dict:
         "common_location": _most_common(filtered_df["job_location"]) if not filtered_df.empty else "Not available",
     }
     return summary
+
+
+# ---------------------------------------------------------------------
+# Top hiring companies
+# ---------------------------------------------------------------------
+def get_top_hiring_companies(filtered_df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+    """
+    Return the top N companies posting the most jobs in the filtered
+    dataset. The dataset does not include a company name column, only
+    `company_id`, so companies are identified by that ID.
+    Returns a DataFrame with columns ['Company ID', 'Job Postings'].
+    """
+    if filtered_df.empty or "company_id" not in filtered_df.columns:
+        return pd.DataFrame(columns=["Company ID", "Job Postings"])
+
+    counts = (
+        filtered_df["company_id"]
+        .dropna()
+        .value_counts()
+        .head(top_n)
+        .reset_index()
+    )
+    counts.columns = ["Company ID", "Job Postings"]
+    # Company IDs are numeric identifiers - display them as clean integers/strings
+    counts["Company ID"] = counts["Company ID"].apply(
+        lambda x: str(int(x)) if isinstance(x, (int, float)) and not pd.isna(x) else str(x)
+    )
+    return counts
 
 
 # ---------------------------------------------------------------------
@@ -192,6 +300,25 @@ def skill_gap_analysis(required_skills: list, user_skills: list) -> dict:
     missing = [skill for skill in required_skills if skill.lower() not in user_skills_lower]
 
     return {"have": have, "missing": missing}
+
+
+# ---------------------------------------------------------------------
+# Match score
+# ---------------------------------------------------------------------
+def calculate_match_score(required_skills: list, user_skills: list) -> int:
+    """
+    Return a 0-100 match score representing what percentage of the
+    required skills the user already has.
+    Returns 0 if there are no required skills to compare against.
+    """
+    if not required_skills:
+        return 0
+
+    user_skills_lower = {skill.lower() for skill in user_skills}
+    matched = sum(1 for skill in required_skills if skill.lower() in user_skills_lower)
+
+    score = (matched / len(required_skills)) * 100
+    return round(score)
 
 
 # ---------------------------------------------------------------------
