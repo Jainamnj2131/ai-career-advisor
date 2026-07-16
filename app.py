@@ -47,64 +47,17 @@ df = get_data()
 # -----------------------------------------------------------------------
 # Custom CSS for a cleaner, modern look
 # -----------------------------------------------------------------------
-st.markdown("""
-    <style>
-    .main-title {
-        font-size: 2.6rem;
-        font-weight: 800;
-        color: #1f2937;
-        margin-bottom: 0;
-    }
-    .subtitle {
-        font-size: 1.1rem;
-        color: #6b7280;
-        margin-top: 0;
-        margin-bottom: 1.5rem;
-    }
-    .metric-card {
-        background-color: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 1rem;
-        text-align: center;
-    }
-    .skill-have {
-        background-color: #dcfce7;
-        color: #166534;
-        padding: 6px 14px;
-        border-radius: 20px;
-        display: inline-block;
-        margin: 4px;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .skill-missing {
-        background-color: #fee2e2;
-        color: #991b1b;
-        padding: 6px 14px;
-        border-radius: 20px;
-        display: inline-block;
-        margin: 4px;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .recommendation-box {
-        background-color: #eff6ff;
-        border-left: 5px solid #3b82f6;
-        padding: 1rem 1.2rem;
-        border-radius: 8px;
-        color: #1e3a8a;
-        font-size: 1.02rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+def load_css():
+    with open("assets/style.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+load_css()
 # -----------------------------------------------------------------------
 # Header
 # -----------------------------------------------------------------------
-st.markdown('<p class="main-title">🎯 AI Career Advisor</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Analyze job market trends and discover the skills you need.</p>',
-            unsafe_allow_html=True)
+with open("assets/hero.html") as f:
+    st.markdown(f.read(), unsafe_allow_html=True)
+
 
 # -----------------------------------------------------------------------
 # Sidebar - Project Information
@@ -281,3 +234,8 @@ if analyze_clicked:
 
 else:
     st.info("👈 Select a job role and enter your skills, then click **Analyze** to get started.")
+
+st.markdown("---")
+
+with open("assets/footer.html", "r", encoding="utf-8") as f:
+    st.markdown(f.read(), unsafe_allow_html=True)
