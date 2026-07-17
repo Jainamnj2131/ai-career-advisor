@@ -3,13 +3,23 @@ analysis.py
 ------------
 Reusable data-analysis functions for the AI Career Advisor app.
 
-The dataset (LinkedIn_RDB_three.csv) has the following columns:
+The app reads linkedin_jobs_cleaned.csv, produced by
+Data_Cleaning_and_NLP.ipynb from the original LinkedIn_RDB_three.csv
+export. It has the same columns as the raw file, plus two extra ones
+added by that notebook: `cleaned_description` and `extracted_skills`.
+
 job_id, title, description, pay_period, work_type, job_location,
 applies, remote_allowed, views, level, sponsored, compensation,
-job_domain, company_id, ben_pack_id
+job_domain, company_id, ben_pack_id, cleaned_description, extracted_skills
 
-There is NO dedicated "skills" column, so skills are extracted from the
-`description` column using a predefined keyword list.
+Note on `extracted_skills`: the notebook's own extraction uses a small
+demo list of ~24 skills. This app intentionally keeps using its own
+richer, on-the-fly extraction (SKILL_KEYWORDS below, 100+ terms across
+10 categories) against the `description` column instead, since it
+detects far more skills than the notebook's list would. The
+`cleaned_description` / `extracted_skills` columns are left in the
+DataFrame but unused, so nothing is lost if a future iteration wants to
+build on them.
 """
 
 import re
@@ -137,15 +147,30 @@ def normalize_skill(skill: str) -> str:
 # Data loading
 # ---------------------------------------------------------------------
 def load_data(path: str) -> pd.DataFrame:
-    """Load the LinkedIn job postings dataset from a CSV file."""
+    """
+    Load the LinkedIn job postings dataset from a CSV file.
+
+    Works with either the original raw CSV or the cleaned CSV produced by
+    Data_Cleaning_and_NLP.ipynb (linkedin_jobs_cleaned.csv). The cleaned
+    file already has whitespace trimmed and missing values filled in, so
+    this mostly acts as a safety net for whichever file is passed in.
+    """
     df = pd.read_csv(path)
 
-    # Basic cleanup - make sure text columns are strings and free of NaN issues
+    # Text/categorical columns: make sure they're clean strings with no
+    # NaNs. `compensation` is deliberately excluded - it's a numeric
+    # amount, not a category, and forcing it to text just to parse it
+    # back to a number later was unnecessary complexity (see
+    # _parse_compensation_value, which now reads numbers directly).
     text_columns = ["title", "description", "work_type", "job_location",
-                     "level", "job_domain", "compensation", "pay_period"]
+                     "level", "job_domain", "pay_period"]
     for col in text_columns:
         if col in df.columns:
-            df[col] = df[col].fillna("Not specified").astype(str).str.strip()
+            df[col] = df[col].fillna("Not Specified").astype(str).str.strip()
+            # Normalize case so a differently-cased placeholder from either
+            # dataset (e.g. "not specified") still matches downstream
+            # filtering in _most_common().
+            df.loc[df[col].str.lower() == "not specified", col] = "Not Specified"
 
     return df
 
@@ -181,17 +206,34 @@ def filter_jobs_by_title(df: pd.DataFrame, selected_title: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------
 # Salary handling
 # ---------------------------------------------------------------------
-def _parse_compensation_value(value: str) -> float:
-    """Convert a compensation string like '$42,000.00' into a float."""
-    if not isinstance(value, str):
+def _parse_compensation_value(value) -> float:
+    """
+    Convert a compensation value into a plain float, regardless of which
+    dataset it came from:
+    - The cleaned dataset (linkedin_jobs_cleaned.csv) already stores
+      compensation as a numeric column (e.g. 42000.0).
+    - The original raw dataset stores it as a string with symbols
+      (e.g. '$42,000.00').
+    Returns None for missing/unparseable values so callers can drop them.
+    """
+    if value is None:
         return None
-    cleaned = re.sub(r"[^\d.]", "", value)
-    if cleaned == "":
-        return None
-    try:
-        return float(cleaned)
-    except ValueError:
-        return None
+
+    # Already numeric (the normal case for the cleaned dataset) - just
+    # guard against NaN, which is a float but not a valid amount.
+    if isinstance(value, (int, float)):
+        return None if pd.isna(value) else float(value)
+
+    if isinstance(value, str):
+        cleaned = re.sub(r"[^\d.]", "", value)
+        if cleaned == "":
+            return None
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+
+    return None
 
 
 def get_average_salary(filtered_df: pd.DataFrame):
@@ -242,8 +284,17 @@ def get_salary_stats(filtered_df: pd.DataFrame) -> dict:
 # Summary statistics
 # ---------------------------------------------------------------------
 def _most_common(series: pd.Series):
-    """Return the most frequent non-empty value in a pandas Series."""
-    cleaned = series[(series.notna()) & (series != "Not specified") & (series != "")]
+    """
+    Return the most frequent non-empty, non-placeholder value in a
+    pandas Series. The "not specified" check is case-insensitive so it
+    correctly excludes the placeholder regardless of which dataset it
+    came from (the cleaned CSV uses "Not Specified"; older data may use
+    other casing).
+    """
+    non_null = series[series.notna()]
+    is_placeholder = non_null.astype(str).str.strip().str.lower().isin(["not specified", ""])
+    cleaned = non_null[~is_placeholder]
+
     if cleaned.empty:
         return "Not available"
     return cleaned.mode().iloc[0]

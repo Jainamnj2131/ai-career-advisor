@@ -49,7 +49,7 @@ st.set_page_config(
     layout="wide"
 )
 
-DATA_PATH = "data/LinkedIn_RDB_three.csv"
+DATA_PATH = "data/linkedin_jobs_cleaned.csv"
 
 # Dark plotly template so charts match the app theme (styling only - the
 # underlying chart data/analysis is unchanged).
@@ -290,7 +290,7 @@ companies_hiring = df["company_id"].nunique()
 overview_cards = [
     ("📂", "Total Jobs in Dataset", f"{total_jobs:,}"),
     ("🧭", "Unique Job Titles", f"{unique_titles:,}"),
-    ("🏢", "Companies Hiring", f"{companies_hiring:,}"),
+    ("🏢", "Unique Company IDs", f"{companies_hiring:,}"),
 ]
 
 m1, m2, m3 = st.columns(3)
@@ -322,7 +322,7 @@ with st.sidebar:
 
     with st.container(border=True):
         st.markdown("**🗂️ Dataset**")
-        st.caption("LinkedIn job postings (`LinkedIn_RDB_three.csv`)")
+        st.caption("LinkedIn job postings, cleaned via `Data_Cleaning_and_NLP.ipynb` (`linkedin_jobs_cleaned.csv`)")
         st.markdown("**🛠️ Tech Stack**")
         st.caption("Python · Streamlit · Pandas · Plotly · Google Gemini")
 
@@ -404,7 +404,7 @@ if analyze_clicked:
 
             with grid_col2:
                 with st.container(border=True):
-                    section_heading("🏢", "Top 5 Hiring Companies")
+                    section_heading("🏢", "Top 5 Hiring Company IDs")
                     top_companies_df = get_top_hiring_companies(filtered_df, top_n=5)
                     if top_companies_df.empty:
                         st.info("No company data is available for the matching job postings.")
@@ -597,7 +597,15 @@ if analyze_clicked:
                 display_cols = ["title", "work_type", "level", "job_location", "compensation", "pay_period"]
                 sample_jobs = filtered_df[display_cols].head(10).reset_index(drop=True)
                 sample_jobs.columns = ["Title", "Work Type", "Level", "Location", "Compensation", "Pay Period"]
-                st.dataframe(sample_jobs, use_container_width=True)
+                st.dataframe(
+                    sample_jobs,
+                    use_container_width=True,
+                    column_config={
+                        # compensation is a clean numeric column (see analysis.load_data),
+                        # so it can be formatted as currency directly - no string wrangling needed.
+                        "Compensation": st.column_config.NumberColumn("Compensation", format="$%,.0f"),
+                    },
+                )
 
 else:
     st.info("👈 Select a job role and enter your skills, then click **Analyze** to get started.")
