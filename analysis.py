@@ -78,6 +78,62 @@ SKILL_KEYWORDS = list(dict.fromkeys(
 
 
 # ---------------------------------------------------------------------
+# Skill normalization
+# ---------------------------------------------------------------------
+# Maps common variant spellings to the single canonical name used in
+# SKILL_KEYWORDS, so "ReactJS", "React.js", and "react" are all treated
+# as the same skill when comparing user input against required skills.
+SKILL_ALIASES = {
+    "reactjs": "React", "react.js": "React", "react js": "React",
+    "nodejs": "Node.js", "node": "Node.js", "node.js": "Node.js", "node js": "Node.js",
+    "js": "JavaScript", "javascript": "JavaScript",
+    "ts": "TypeScript", "typescript": "TypeScript",
+    "vuejs": "Vue", "vue.js": "Vue", "vue js": "Vue",
+    "nextjs": "Next.js", "next": "Next.js", "next.js": "Next.js",
+    "postgres": "PostgreSQL", "postgresql": "PostgreSQL",
+    "mongo": "MongoDB", "mongodb": "MongoDB",
+    "k8s": "Kubernetes", "kubernetes": "Kubernetes",
+    "csharp": "C#", "c sharp": "C#", "c#": "C#",
+    "golang": "Golang", "go": "Golang",
+    "sklearn": "Scikit-learn", "scikit learn": "Scikit-learn", "scikit-learn": "Scikit-learn",
+    "cicd": "CI/CD", "ci cd": "CI/CD", "ci/cd": "CI/CD",
+    "restapi": "REST API", "rest api": "REST API", "rest": "REST API",
+    "gcp": "GCP", "google cloud": "GCP", "google cloud platform": "GCP",
+    "aws": "AWS", "amazon web services": "AWS",
+    "powerbi": "Power BI", "power bi": "Power BI",
+    "tailwindcss": "Tailwind CSS", "tailwind": "Tailwind CSS",
+    "dotnet": ".NET", ".net": ".NET",
+}
+
+
+def normalize_skill(skill: str) -> str:
+    """
+    Normalize a skill string to a canonical form so that variants like
+    'ReactJS', 'React.js', and 'react' all compare equal. Falls back to
+    the original (trimmed) text when no canonical match is found, so
+    unrecognized skills still compare consistently against themselves.
+    """
+    if not skill or not isinstance(skill, str):
+        return ""
+
+    raw = skill.strip().lower()
+    compact = re.sub(r"[.\-_]", "", raw)
+
+    if raw in SKILL_ALIASES:
+        return SKILL_ALIASES[raw]
+    if compact in SKILL_ALIASES:
+        return SKILL_ALIASES[compact]
+
+    # Fall back to a case-insensitive match against the known keyword list
+    for canonical in SKILL_KEYWORDS:
+        canonical_lower = canonical.lower()
+        if canonical_lower == raw or re.sub(r"[.\-_]", "", canonical_lower) == compact:
+            return canonical
+
+    return skill.strip()
+
+
+# ---------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------
 def load_data(path: str) -> pd.DataFrame:
@@ -291,13 +347,16 @@ def parse_user_skills(raw_text: str) -> list:
 def skill_gap_analysis(required_skills: list, user_skills: list) -> dict:
     """
     Compare the required skills (from job postings) against the user's
-    entered skills. Matching is case-insensitive.
-    Returns a dict with 'have' and 'missing' skill lists.
+    entered skills. Matching is case-insensitive AND normalized, so
+    variants like "ReactJS" / "React.js" / "react" are recognized as the
+    same skill as "React" (see normalize_skill / SKILL_ALIASES).
+    Returns a dict with 'have' and 'missing' skill lists (using the
+    original, human-readable required-skill labels).
     """
-    user_skills_lower = {skill.lower() for skill in user_skills}
+    normalized_user = {normalize_skill(skill).lower() for skill in user_skills}
 
-    have = [skill for skill in required_skills if skill.lower() in user_skills_lower]
-    missing = [skill for skill in required_skills if skill.lower() not in user_skills_lower]
+    have = [skill for skill in required_skills if normalize_skill(skill).lower() in normalized_user]
+    missing = [skill for skill in required_skills if normalize_skill(skill).lower() not in normalized_user]
 
     return {"have": have, "missing": missing}
 
@@ -308,17 +367,182 @@ def skill_gap_analysis(required_skills: list, user_skills: list) -> dict:
 def calculate_match_score(required_skills: list, user_skills: list) -> int:
     """
     Return a 0-100 match score representing what percentage of the
-    required skills the user already has.
+    required skills the user already has. Uses normalized matching
+    (see normalize_skill) so skill variants are recognized correctly.
     Returns 0 if there are no required skills to compare against.
     """
     if not required_skills:
         return 0
 
-    user_skills_lower = {skill.lower() for skill in user_skills}
-    matched = sum(1 for skill in required_skills if skill.lower() in user_skills_lower)
+    normalized_user = {normalize_skill(skill).lower() for skill in user_skills}
+    matched = sum(1 for skill in required_skills if normalize_skill(skill).lower() in normalized_user)
 
     score = (matched / len(required_skills)) * 100
     return round(score)
+
+
+# ---------------------------------------------------------------------
+# Skill grouping (Frontend / Backend / Database / Cloud / Tools / Soft Skills)
+# ---------------------------------------------------------------------
+# Consolidates the finer-grained SKILL_CATEGORIES into the broader
+# buckets used for the skill-gap breakdown view.
+_CATEGORY_TO_GROUP = {
+    "Frontend": "Frontend",
+    "Backend": "Backend",
+    "Databases": "Database",
+    "Cloud": "Cloud",
+    "DevOps": "Tools",
+    "Data Analytics": "Tools",
+    "AI": "Tools",
+    "Computer Science Fundamentals": "Tools",
+    "Soft Skills": "Soft Skills",
+}
+# Programming languages are split by how they're typically used.
+_FRONTEND_LANGUAGES = {"JavaScript", "TypeScript"}
+
+SKILL_GROUPS = ["Frontend", "Backend", "Database", "Cloud", "Tools", "Soft Skills"]
+
+
+def _skill_to_group(skill: str) -> str:
+    """Map a single skill name to one of the SKILL_GROUPS buckets."""
+    for category, skills in SKILL_CATEGORIES.items():
+        if skill in skills:
+            if category == "Programming Languages":
+                return "Frontend" if skill in _FRONTEND_LANGUAGES else "Backend"
+            return _CATEGORY_TO_GROUP.get(category, "Tools")
+    return "Tools"
+
+
+def group_skills(skills: list) -> dict:
+    """
+    Group a flat list of skill names into Frontend / Backend / Database /
+    Cloud / Tools / Soft Skills buckets. Only non-empty buckets are
+    returned, in a fixed, sensible display order.
+    """
+    buckets = {group: [] for group in SKILL_GROUPS}
+    for skill in skills:
+        buckets[_skill_to_group(skill)].append(skill)
+    return {group: items for group, items in buckets.items() if items}
+
+
+# ---------------------------------------------------------------------
+# Skill priority (High / Medium / Low)
+# ---------------------------------------------------------------------
+def assign_skill_priority(top_skills_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add a 'Priority' column (High / Medium / Low) to a top-skills
+    DataFrame, based on how frequently each skill appears relative to
+    the most-requested skill for the role. Returns a new DataFrame -
+    the input is not modified.
+    """
+    result = top_skills_df.copy()
+    if result.empty:
+        result["Priority"] = pd.Series(dtype="object")
+        return result
+
+    max_count = result["Count"].max()
+
+    def _priority(count):
+        ratio = (count / max_count) if max_count else 0
+        if ratio >= 0.66:
+            return "High"
+        if ratio >= 0.33:
+            return "Medium"
+        return "Low"
+
+    result["Priority"] = result["Count"].apply(_priority)
+    return result
+
+
+# ---------------------------------------------------------------------
+# Career readiness score
+# ---------------------------------------------------------------------
+_PRIORITY_WEIGHTS = {"High": 3, "Medium": 2, "Low": 1}
+
+
+def calculate_career_readiness(top_skills_df: pd.DataFrame, user_skills: list) -> dict:
+    """
+    Calculate a weighted career-readiness score that gives more credit
+    for matching high-priority (frequently required) skills than
+    low-priority ones, and maps the score to a readiness level with a
+    short explanation.
+
+    Returns a dict: {"score": int 0-100, "level": str, "explanation": str}
+    """
+    if top_skills_df.empty:
+        return {
+            "score": 0,
+            "level": "Beginner",
+            "explanation": "Not enough job data was found for this role to assess readiness.",
+        }
+
+    prioritized = assign_skill_priority(top_skills_df)
+    normalized_user = {normalize_skill(skill).lower() for skill in user_skills}
+
+    total_weight = 0
+    matched_weight = 0
+    for _, row in prioritized.iterrows():
+        weight = _PRIORITY_WEIGHTS.get(row["Priority"], 1)
+        total_weight += weight
+        if normalize_skill(row["Skill"]).lower() in normalized_user:
+            matched_weight += weight
+
+    score = round((matched_weight / total_weight) * 100) if total_weight else 0
+
+    if score >= 85:
+        level = "Job Ready"
+        explanation = "You already cover most of the high-priority skills employers are asking for in this role."
+    elif score >= 65:
+        level = "Advanced"
+        explanation = "You have a strong foundation, with a few high-priority skills left to pick up."
+    elif score >= 40:
+        level = "Intermediate"
+        explanation = "You have some relevant skills, but several high-priority requirements are still missing."
+    else:
+        level = "Beginner"
+        explanation = "Most of the key skills employers want for this role are not yet in your profile."
+
+    return {"score": score, "level": level, "explanation": explanation}
+
+
+# ---------------------------------------------------------------------
+# Structured fallback learning roadmap
+# ---------------------------------------------------------------------
+def generate_learning_roadmap(missing_skills: list) -> list:
+    """
+    Build a simple, structured multi-week learning roadmap from a list of
+    missing skills. Used as a fallback when the AI (Gemini) recommendation
+    is unavailable, so the user still gets a structured plan instead of a
+    single paragraph. Returns a list of (label, content) tuples.
+    """
+    if not missing_skills:
+        return [(
+            "Overview",
+            "You already cover the top required skills for this role - focus on "
+            "building projects that demonstrate them well.",
+        )]
+
+    weeks = [missing_skills[i:i + 2] for i in range(0, len(missing_skills), 2)][:4]
+    roadmap = []
+    for i, chunk in enumerate(weeks, start=1):
+        roadmap.append((f"Week {i}", f"Focus on: {', '.join(chunk)}."))
+
+    covered = sum(len(chunk) for chunk in weeks)
+    remaining = missing_skills[covered:]
+    if remaining:
+        roadmap.append(("Ongoing", f"Continue building familiarity with: {', '.join(remaining)}."))
+
+    roadmap.append((
+        "Projects",
+        "Build 1-2 small projects that combine your existing skills with the "
+        "new ones above, and add them to your portfolio.",
+    ))
+    roadmap.append((
+        "Interview Prep",
+        "Review common interview questions for this role and practice explaining "
+        "your projects and skill choices out loud.",
+    ))
+    return roadmap
 
 
 # ---------------------------------------------------------------------

@@ -434,6 +434,150 @@ section[data-testid="stSidebar"] div[data-testid="stMetric"] {
 }
 
 /* =========================================================================
+   TABS (dashboard navigation - was unstyled, clashed with dark theme)
+   ========================================================================= */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.4rem;
+    background: var(--surface);
+    padding: 0.4rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft);
+}
+.stTabs [data-baseweb="tab"] {
+    height: auto;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: transparent;
+    transition: color 0.18s ease, background 0.18s ease;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+.stTabs [aria-selected="true"] {
+    color: #04121a !important;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--blue) 100%) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none;
+}
+.stTabs [data-baseweb="tab-border"] {
+    display: none;
+}
+
+/* =========================================================================
+   PRIORITY BADGES (High / Medium / Low required skills)
+   ========================================================================= */
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin: 3px;
+}
+.priority-high {
+    background: rgba(248, 113, 113, 0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.32);
+}
+.priority-medium {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fcd34d;
+    border: 1px solid rgba(251, 191, 36, 0.32);
+}
+.priority-low {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+/* =========================================================================
+   CAREER READINESS BADGE
+   ========================================================================= */
+.readiness-badge {
+    display: inline-block;
+    padding: 0.4rem 1.1rem;
+    border-radius: 999px;
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+.readiness-beginner {
+    background: rgba(248, 113, 113, 0.14);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.32);
+}
+.readiness-intermediate {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fcd34d;
+    border: 1px solid rgba(251, 191, 36, 0.32);
+}
+.readiness-advanced {
+    background: rgba(96, 165, 250, 0.14);
+    color: #93c5fd;
+    border: 1px solid rgba(96, 165, 250, 0.32);
+}
+.readiness-job-ready {
+    background: rgba(52, 211, 153, 0.14);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.32);
+}
+.readiness-explanation {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0.3rem 0 1rem 0;
+}
+
+/* =========================================================================
+   SKILL GROUP HEADERS (Frontend / Backend / Database / Cloud / Tools / Soft Skills)
+   ========================================================================= */
+.group-header {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--indigo);
+    margin: 0.9rem 0 0.35rem 0;
+}
+.group-header:first-child {
+    margin-top: 0;
+}
+
+/* =========================================================================
+   ROADMAP TIMELINE (structured fallback / week-by-week plan)
+   ========================================================================= */
+.roadmap-step {
+    display: flex;
+    gap: 0.9rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border-soft);
+}
+.roadmap-step:last-child {
+    border-bottom: none;
+}
+.roadmap-label {
+    flex-shrink: 0;
+    width: 110px;
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--cyan);
+    font-size: 0.88rem;
+}
+.roadmap-content {
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+/* =========================================================================
    RESPONSIVE SPACING
    ========================================================================= */
 @media (max-width: 900px) {
