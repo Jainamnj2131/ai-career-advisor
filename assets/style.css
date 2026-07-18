@@ -211,7 +211,9 @@ div[data-testid="stAlert"] {
    INPUTS
    ========================================================================= */
 div[data-baseweb="select"] > div {
-    min-height: 3.2rem;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
     font-size: 1.03rem;
     background-color: var(--surface-strong) !important;
     border-radius: var(--radius-sm) !important;
@@ -595,6 +597,55 @@ section[data-testid="stSidebar"] div[data-testid="stMetric"] {
 }
 
 /* =========================================================================
+   WELCOME / LANDING SCREEN
+   ========================================================================= */
+@keyframes spark-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.landing-wrap {
+    max-width: 640px;
+    margin: 4vh auto;
+    padding: 3rem 2.6rem;
+    border-radius: 24px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.16) 0%, rgba(59, 130, 246, 0.12) 45%, rgba(129, 140, 248, 0.08) 100%);
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 20px 60px -30px rgba(34, 211, 238, 0.35);
+    animation: spark-fade-in 0.5s ease-out;
+}
+.landing-icon {
+    font-size: 3.6rem;
+    display: block;
+    margin-bottom: 0.6rem;
+    filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.45));
+}
+.landing-title {
+    font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(90deg, #f8fafc 0%, #a5f3fc 45%, #93c5fd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.landing-subtitle {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--cyan);
+    margin: 0 0 1.1rem 0;
+}
+.landing-description {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 0.5rem auto;
+}
+
+/* =========================================================================
    RESPONSIVE SPACING
    ========================================================================= */
 @media (max-width: 900px) {
@@ -617,5 +668,12 @@ section[data-testid="stSidebar"] div[data-testid="stMetric"] {
     }
     .footer-links {
         margin-top: 0.5rem;
+    }
+    .landing-wrap {
+        margin: 2vh 1rem;
+        padding: 2.2rem 1.4rem;
+    }
+    .landing-title {
+        font-size: 2.1rem;
     }
 }
