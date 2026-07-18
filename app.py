@@ -277,22 +277,32 @@ load_css()
 # -----------------------------------------------------------------------
 # Welcome / Landing Screen
 # -------------------------------------------------------------------------
-# Shown once per session before the dashboard. Clicking "Start Analyzing"
-# flips a session-state flag and reruns the app straight into the existing
-# dashboard below - the dashboard itself is completely unchanged, this
-# just decides whether to show it yet.
-# -----------------------------------------------------------------------
 if "spark_started" not in st.session_state:
     st.session_state.spark_started = False
 
 if not st.session_state.spark_started:
     st.markdown(
-        """
+"""
 <div class="landing-wrap">
 <span class="landing-icon">⚡</span>
 <h1 class="landing-title">Spark</h1>
 <p class="landing-subtitle">Your Personal AI Career Advisor</p>
-<p class="landing-description">Spark analyzes real job market data to show you exactly which skills a role needs, how your current skills measure up, and a personalized roadmap to close the gap - powered by market analytics and optional AI-generated career coaching.</p>
+<div class="landing-features">
+<div class="feature-card">
+<span class="feature-icon">📊</span>
+<div class="feature-text">
+<h4>Personalized AI Advisor</h4>
+<p>Powered by market analytics</p>
+</div>
+</div>
+<div class="feature-card">
+<span class="feature-icon">🤖</span>
+<div class="feature-text">
+<h4>AI-Powered Career Coaching</h4>
+<p>Optional AI-generated career coaching</p>
+</div>
+</div>
+</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -374,6 +384,9 @@ else:
     # -------------------------------------------------------------------
     # Main input section
     # -------------------------------------------------------------------
+    # -------------------------------------------------------------------
+    # Main input section
+    # -------------------------------------------------------------------
     section_heading("🔎", "Find Your Skill Gap")
 
     col1, col2 = st.columns(2)
@@ -386,10 +399,11 @@ else:
         user_skills_raw = st.text_area(
             "🛠️ Enter Your Skills",
             placeholder="Example: Python, SQL, Excel",
-            height=110
+            height=68 # Reduced from 110 to allow exact CSS alignment
         )
 
-    analyze_clicked = st.button("🔍 Analyze", type="primary", use_container_width=False)
+    # Expanded to full width to anchor the bottom of the input form
+    analyze_clicked = st.button("🔍 Analyze Career Gap", type="primary", use_container_width=True)
 
     st.divider()
 
