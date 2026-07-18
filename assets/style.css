@@ -167,7 +167,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover {
 }
 
 /* =========================================================================
-   NATIVE st.metric POLISH
+   NATIVE st.metric POLISH & TEXT WRAPPING OVERRIDES
    ========================================================================= */
 div[data-testid="stMetric"] {
     background: var(--surface-strong);
@@ -185,10 +185,26 @@ div[data-testid="stMetricLabel"] {
     color: var(--text-muted) !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em;
+    white-space: normal !important;
+    min-height: 2rem;
 }
 div[data-testid="stMetricValue"] {
     color: var(--text-primary) !important;
     font-family: 'Sora', 'Inter', sans-serif;
+    font-size: 1.6rem !important; 
+    white-space: normal !important; 
+    word-break: break-word !important;
+    line-height: 1.2 !important;
+}
+
+/* =========================================================================
+   ALERTS / NATIVE STREAMLIT BLUES OVERRIDE
+   ========================================================================= */
+div[data-testid="stAlert"] {
+    background-color: var(--surface-strong) !important;
+    border: 1px solid var(--border-soft) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-md) !important;
 }
 
 /* =========================================================================
@@ -462,7 +478,8 @@ section[data-testid="stSidebar"] div[data-testid="stMetric"] {
     background: linear-gradient(90deg, var(--cyan) 0%, var(--blue) 100%) !important;
 }
 .stTabs [data-baseweb="tab-highlight"] {
-    display: none;
+    display: block !important;
+    background-color: var(--cyan) !important;
 }
 .stTabs [data-baseweb="tab-border"] {
     display: none;

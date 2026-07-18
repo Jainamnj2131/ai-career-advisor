@@ -351,10 +351,10 @@ with col2:
     user_skills_raw = st.text_area(
         "🛠️ Enter Your Skills",
         placeholder="Example: Python, SQL, Excel",
-        height=110
+        height=68
     )
 
-analyze_clicked = st.button("🔍 Analyze", type="primary", use_container_width=False)
+analyze_clicked = st.button("🔍 Analyze", type="primary", use_container_width=True)
 
 st.divider()
 
@@ -405,71 +405,77 @@ if analyze_clicked:
             with grid_col2:
                 with st.container(border=True):
                     section_heading("🏢", "Top 5 Hiring Company IDs")
-                    top_companies_df = get_top_hiring_companies(filtered_df, top_n=5)
-                    if top_companies_df.empty:
-                        st.info("No company data is available for the matching job postings.")
+                    if len(filtered_df) < 3:
+                        st.info("📊 Not enough data points to generate meaningful charts for this highly specific role. Try a broader job title.")
                     else:
-                        st.caption("The dataset identifies companies by ID rather than name.")
-                        fig_companies = px.bar(
-                            top_companies_df,
-                            x="Job Postings",
-                            y="Company ID",
-                            orientation="h",
-                            color="Job Postings",
-                            color_continuous_scale=["#0f3b47", "#22d3ee"],
+                        top_companies_df = get_top_hiring_companies(filtered_df, top_n=5)
+                        if top_companies_df.empty:
+                            st.info("No company data is available for the matching job postings.")
+                        else:
+                            st.caption("The dataset identifies companies by ID rather than name.")
+                            fig_companies = px.bar(
+                                top_companies_df,
+                                x="Job Postings",
+                                y="Company ID",
+                                orientation="h",
+                                color="Job Postings",
+                                color_continuous_scale=["#0f3b47", "#22d3ee"],
+                            )
+                            fig_companies.update_layout(
+                                yaxis=dict(type="category", autorange="reversed"),
+                                showlegend=False,
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                                font=dict(color="#cbd5e1", family="Inter, sans-serif"),
+                                margin=dict(t=10, b=10, l=10, r=10),
+                            )
+                            st.plotly_chart(fig_companies, use_container_width=True)
+
+            if len(filtered_df) < 3:
+                st.info("📊 Not enough data points to generate meaningful distribution charts for this highly specific role. Try a broader job title.")
+            else:
+                vis_col1, vis_col2 = st.columns(2)
+                with vis_col1:
+                    with st.container(border=True):
+                        section_heading("📈", "Work Type Distribution")
+                        work_type_counts = filtered_df["work_type"].value_counts().reset_index()
+                        work_type_counts.columns = ["Work Type", "Count"]
+                        fig_worktype = px.pie(
+                            work_type_counts,
+                            names="Work Type",
+                            values="Count",
+                            hole=0.55,
+                            color_discrete_sequence=CHART_COLORWAY,
                         )
-                        fig_companies.update_layout(
-                            yaxis=dict(type="category", autorange="reversed"),
+                        fig_worktype.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font=dict(color="#cbd5e1", family="Inter, sans-serif"),
+                            margin=dict(t=10, b=10, l=10, r=10),
+                            legend=dict(orientation="h", yanchor="bottom", y=-0.25),
+                        )
+                        st.plotly_chart(fig_worktype, use_container_width=True)
+
+                with vis_col2:
+                    with st.container(border=True):
+                        section_heading("📊", "Experience Level Distribution")
+                        level_counts = filtered_df["level"].value_counts().reset_index()
+                        level_counts.columns = ["Experience Level", "Count"]
+                        fig_level = px.bar(
+                            level_counts,
+                            x="Experience Level",
+                            y="Count",
+                            color="Count",
+                            color_continuous_scale=["#1e3a8a", "#60a5fa"],
+                        )
+                        fig_level.update_layout(
                             showlegend=False,
                             paper_bgcolor="rgba(0,0,0,0)",
                             plot_bgcolor="rgba(0,0,0,0)",
                             font=dict(color="#cbd5e1", family="Inter, sans-serif"),
                             margin=dict(t=10, b=10, l=10, r=10),
                         )
-                        st.plotly_chart(fig_companies, use_container_width=True)
-
-            vis_col1, vis_col2 = st.columns(2)
-            with vis_col1:
-                with st.container(border=True):
-                    section_heading("📈", "Work Type Distribution")
-                    work_type_counts = filtered_df["work_type"].value_counts().reset_index()
-                    work_type_counts.columns = ["Work Type", "Count"]
-                    fig_worktype = px.pie(
-                        work_type_counts,
-                        names="Work Type",
-                        values="Count",
-                        hole=0.55,
-                        color_discrete_sequence=CHART_COLORWAY,
-                    )
-                    fig_worktype.update_layout(
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#cbd5e1", family="Inter, sans-serif"),
-                        margin=dict(t=10, b=10, l=10, r=10),
-                        legend=dict(orientation="h", yanchor="bottom", y=-0.25),
-                    )
-                    st.plotly_chart(fig_worktype, use_container_width=True)
-
-            with vis_col2:
-                with st.container(border=True):
-                    section_heading("📊", "Experience Level Distribution")
-                    level_counts = filtered_df["level"].value_counts().reset_index()
-                    level_counts.columns = ["Experience Level", "Count"]
-                    fig_level = px.bar(
-                        level_counts,
-                        x="Experience Level",
-                        y="Count",
-                        color="Count",
-                        color_continuous_scale=["#1e3a8a", "#60a5fa"],
-                    )
-                    fig_level.update_layout(
-                        showlegend=False,
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#cbd5e1", family="Inter, sans-serif"),
-                        margin=dict(t=10, b=10, l=10, r=10),
-                    )
-                    st.plotly_chart(fig_level, use_container_width=True)
+                        st.plotly_chart(fig_level, use_container_width=True)
 
         # ================= TAB 2: SKILL GAP ANALYSIS =================
         with tab_skills:
